@@ -242,14 +242,14 @@ scene.add(directionalLight)
  * Sizes
  */
 const sizes = {
-    width: window.innerWidth,
+    width: window.innerWidth * 0.5,
     height: window.innerHeight
 }
 
 window.addEventListener('resize', () =>
 {
     // Update sizes
-    sizes.width = window.innerWidth
+    sizes.width = window.innerWidth * 0.5
     sizes.height = window.innerHeight
 
     // Update camera
@@ -313,9 +313,9 @@ const tick = () =>
         
         
             const landmark = landmarks[i]
-            const position = new THREE.Vector3(landmarkPositions[i].x * 10, landmarkPositions[i].y * 10, landmarkPositions[i].z * 10)
+            const position = new THREE.Vector3(landmarkPositions[i].x * 10, -landmarkPositions[i].y * 10, landmarkPositions[i].z * 10)
     
-            console.log(position)
+            // console.log(position)
             
             landmark.mesh.position.copy(position)
             // landmark.body.position.copy(position)

@@ -106,8 +106,10 @@ function enableCam(event) {
   }
 
   webcamRunning = !webcamRunning;
-  enableWebcamButton.innerText = webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE PREDICTIONS";
+  // enableWebcamButton.innerText = webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE PREDICTIONS";
 
+  enableWebcamButton.style.display = "none";
+  
   const constraints = {
       video: true
   };

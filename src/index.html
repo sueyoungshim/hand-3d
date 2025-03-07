@@ -11,26 +11,39 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>media pipe</h1>
-
-    <section id="demos" class="invisible">
-        <h2>Demo: Webcam continuous hands landmarks detection</h2>
-        <p>Hold your hand in front of your webcam to get real-time hand landmarker detection.</br>Click <b>enable webcam</b> below and grant access to the webcam if prompted.</p>
-
+    <!-- <section id="demos" class="invisible">
         <div id="liveView" class="videoView">
             <button id="webcamButton" class="mdc-button mdc-button--raised">
                 <span class="mdc-button__ripple"></span>
                 <span class="mdc-button__label">ENABLE WEBCAM</span>
             </button>
-            <div style="position: relative;">
+            <div>
                 <video id="webcam" autoplay playsinline></video>
                 <canvas class="output_canvas" id="output_canvas" style="position: absolute; left: 0px; top: 0px;"></canvas>
               
                 <canvas class="webgl"></canvas>
-            
               </div>
         </div>
-    </section>
+    </section> -->
+
+    <section id="demos" class="invisible">
+      <div class="container">
+        <div class="box fill">
+          <button id="webcamButton" class="button">
+            enable webcam
+          </button>
+          <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas class="output_canvas" id="output_canvas"></canvas>
+        </div>
+        
+        </div>
+
+        <div class="box">
+          <canvas class="webgl"></canvas>
+        </div>
+      </div>
+  </section>
 
     <script src="script.js" type="module"></script>
     <script src="threeScript.js" type="module"></script>
