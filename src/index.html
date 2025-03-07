@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Hand landmark detection using the MediaPipe HandLandmarker task</h1>
+    <h1>media pipe</h1>
 
     <section id="demos" class="invisible">
         <h2>Demo: Webcam continuous hands landmarks detection</h2>
@@ -25,10 +25,14 @@
             <div style="position: relative;">
                 <video id="webcam" autoplay playsinline></video>
                 <canvas class="output_canvas" id="output_canvas" style="position: absolute; left: 0px; top: 0px;"></canvas>
-            </div>
+              
+                <canvas class="webgl"></canvas>
+            
+              </div>
         </div>
     </section>
 
     <script src="script.js" type="module"></script>
+    <script src="threeScript.js" type="module"></script>
 </body>
 </html>

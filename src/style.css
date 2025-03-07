@@ -13,9 +13,20 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 @use "@material";
+
+html,
+body {
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+}
+
+
+
 body {
   font-family: roboto;
-  margin: 2em;
+  /* margin: 2em; */
   color: #3d3d3d;
   --mdc-theme-primary: #007f8b;
   --mdc-theme-on-primary: #f1f3f4;

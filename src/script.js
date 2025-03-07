@@ -139,7 +139,6 @@ async function predictWebcam() {
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   if (results.landmarks) {
-      console.log('landmarks', results.landmarks);
       for (const landmarks of results.landmarks) {
           drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
               color: "#00FF00",
@@ -147,6 +146,34 @@ async function predictWebcam() {
           });
           drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
       }
+  }
+
+  if (results.worldLandmarks) {
+    // console.log(results.worldLandmarks)
+
+    if (results.worldLandmarks[0] && results.worldLandmarks[0].length === 21) {
+      const landmarks = results.worldLandmarks[0]
+      // console.log(landmarks)
+      window.createSphereAtHand(landmarks)
+    }
+    // const landmarks = results.worldLandmarks[0]
+    // console.log(landmarks[0])
+
+    // const palm = landmarks[0] // Wrist position (or use fingertip, etc.)
+
+    // // Scale coordinates to fit Three.js world
+    // const x = palm.x * 5
+    // const y = palm.y * 5
+    // const z = palm.z * 5
+
+    // // Call the function in threeScript.js
+    // if (window.createSphereAtHand) {
+    //   console.log(window.createSphereAtHand)
+      
+    //     window.createSphereAtHand(x, y, z)
+    // }
+
+    
   }
   canvasCtx.restore();
 

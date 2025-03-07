@@ -12,7 +12,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "three.js": "^0.77.1",
+    "cannon-es": "^0.20.0",
+    "lil-gui": "^0.20.0",
+    "three": "^0.174.0",
     "vercel": "^41.3.2",
     "vite": "^6.2.1",
     "vite-plugin-restart": "^0.4.2"
