@@ -4,7 +4,6 @@ import GUI from 'lil-gui'
 // import CANNON from 'cannon' 
 import * as CANNON from 'cannon-es'
 
-
 /**
  * Debug
  */
@@ -16,10 +15,11 @@ debugObject.createSphere = () =>
     createSphere(
         Math.random() * 0.5,
         {
-            x: (Math.random() - 0.5) * 3,
-            y: 3,
-            z: (Math.random() - 0.5) * 3
-        }
+            x: (Math.random() - 0.5) * 1,
+            y: 1,
+            z: (Math.random() - 0.5) * 1
+        },
+        1
     )
 }
 
@@ -66,6 +66,8 @@ const canvas = document.querySelector('canvas.webgl')
 // Scene
 const scene = new THREE.Scene()
 
+scene.add(new THREE.GridHelper(10, 10))
+
 /**
  * Sounds
  */
@@ -99,7 +101,7 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
     defaultMaterial,
     {
         friction: 0.1,
-        restitution: 0.7
+        restitution: 0.3
     }
 )
 world.defaultContactMaterial = defaultContactMaterial
@@ -128,13 +130,21 @@ const sphereMaterial = new THREE.MeshStandardMaterial({
 const landmarks = []
 let landmarkPositions
 
-const createSphere = (radius, position, mass=1) =>
+const createSphere = (radius, position, mass=1, color='#ffffff') =>
 {
     // Three.js mesh
+
+    const sphereMaterial = new THREE.MeshStandardMaterial({
+        metalness: 0.3,
+        roughness: 0.4,
+        envMapIntensity: 0.5
+    })
+
     const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
     mesh.castShadow = true
     mesh.scale.set(radius, radius, radius)
     mesh.position.copy(position)
+    mesh.material.color = new THREE.Color(color)
     
     scene.add(mesh)
 
@@ -157,13 +167,25 @@ const createSphere = (radius, position, mass=1) =>
     if (mass === 0) {
         landmarks.push({mesh, body})
     }
+
+    return mesh
 }
+    
+const fingerColors = [
+    '#ffffff', // Wrist (0)
+    '#ff0000', '#ff0000', '#ff0000', '#ff0000', // Thumb (1-4)
+    '#00ff00', '#00ff00', '#00ff00', '#00ff00', // Index (5-8)
+    '#0000ff', '#0000ff', '#0000ff', '#0000ff', // Middle (9-12)
+    '#ffff00', '#ffff00', '#ffff00', '#ffff00', // Ring (13-16)
+    '#ff00ff', '#ff00ff', '#ff00ff', '#ff00ff'  // Pinky (17-20)
+]
 
 for (let i = 0; i < 21; i++) {
-    createSphere(0.1, new THREE.Vector3(i, i, i), 0)
+    const landmark = createSphere(0.1, new THREE.Vector3(i, i, i), 0)
+    landmark.material.color = new THREE.Color(fingerColors[i])
 }
 
-console.log(landmarks)
+
 
 // landmarks = an array of 21 position objects
 window.createSphereAtHand = (landmarks) => {
@@ -266,7 +288,7 @@ window.addEventListener('resize', () =>
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(-6, 2, 6)
+camera.position.set(-3, 2, 3)
 camera.lookAt(0, 0, 0)
 scene.add(camera)
 
@@ -300,6 +322,7 @@ const tick = () =>
     // Update physics
     world.step(1 / 60, deltaTime, 3)
     
+    
     for(const object of objectsToUpdate)
     {
         object.mesh.position.copy(object.body.position)
@@ -315,10 +338,12 @@ const tick = () =>
             const landmark = landmarks[i]
             const position = new THREE.Vector3(landmarkPositions[i].x * 10, -landmarkPositions[i].y * 10, landmarkPositions[i].z * 10)
     
+            // console.log(position.z)
+            
             // console.log(position)
             
             landmark.mesh.position.copy(position)
-            // landmark.body.position.copy(position)
+            landmark.body.position.copy(position)
             // landmark.mesh.quaternion.copy(position)
             // landmark.body.quaternion.copy(position)
         }

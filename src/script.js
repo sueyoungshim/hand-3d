@@ -14,8 +14,11 @@
 
 import {
   HandLandmarker,
-  FilesetResolver
+  FilesetResolver,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+
+import * as tf from '@tensorflow/tfjs';
+import * as depthEstimation from '@tensorflow-models/depth-estimation';
 
 const demosSection = document.getElementById("demos");
 
@@ -40,51 +43,107 @@ const createHandLandmarker = async () => {
 };
 createHandLandmarker();
 
-const imageContainers = document.getElementsByClassName("detectOnClick");
 
-for (let i = 0; i < imageContainers.length; i++) {
-  imageContainers[i].children[0].addEventListener("click", handleClick);
+/**
+ * DEPTH ESTIMATOR
+ */
+let estimator;
+
+async function loadDepthEstimator() {
+  console.log(depthEstimation)
+  
+  const model = depthEstimation.SupportedModels.ARPortraitDepth;
+  estimator = await depthEstimation.createEstimator(model);
 }
 
-async function handleClick(event) {
-  if (!handLandmarker) {
-      console.log("Wait for handLandmarker to load before clicking!");
-      return;
-  }
+loadDepthEstimator()
 
-  if (runningMode === "VIDEO") {
-      runningMode = "IMAGE";
-      await handLandmarker.setOptions({ runningMode: "IMAGE" });
-  }
-
-  const allCanvas = event.target.parentNode.getElementsByClassName("canvas");
-  for (let i = allCanvas.length - 1; i >= 0; i--) {
-      const n = allCanvas[i];
-      n.parentNode.removeChild(n);
-  }
-
-  const handLandmarkerResult = handLandmarker.detect(event.target);
-  console.log(handLandmarkerResult.handednesses[0][0]);
-  const canvas = document.createElement("canvas");
-  canvas.setAttribute("class", "canvas");
-  canvas.setAttribute("width", event.target.naturalWidth + "px");
-  canvas.setAttribute("height", event.target.naturalHeight + "px");
-  canvas.style =
-      "left: 0px;" +
-      "top: 0px;" +
-      "width: " + event.target.width + "px;" +
-      "height: " + event.target.height + "px;";
-
-  event.target.parentNode.appendChild(canvas);
-  const cxt = canvas.getContext("2d");
-  for (const landmarks of handLandmarkerResult.landmarks) {
-      drawConnectors(cxt, landmarks, HAND_CONNECTIONS, {
-          color: "#00FF00",
-          lineWidth: 5
-      });
-      drawLandmarks(cxt, landmarks, { color: "#FF0000", lineWidth: 1 });
-  }
+const estimationConfig = {
+  minDepth: 0,
+  maxDepth: 10,
 }
+
+async function estimateDepth(videoElement) {
+  if (!estimator) {
+      console.error("Depth model not loaded!")
+      return
+  }
+
+  // Run depth estimation on video frame
+  const depthMap = await estimator.estimateDepth(videoElement, estimationConfig)
+
+  return depthMap // Returns a TensorFlow.js tensor image
+}
+
+
+
+async function renderDepth(video, canvas) {
+  const depthMap = await estimateDepth(video)
+  if (!depthMap) return
+
+
+  const ctx = canvas.getContext("2d")
+  const depthTensor = await depthMap.toTensor()
+  const depthArray = await depthTensor.data()
+
+  console.log(depthArray)
+  
+
+  const videoWidth = video.videoWidth
+  const videoHeight = video.videoHeight
+
+  // // Normalize depth for visualization
+  // const minDepth = Math.min(...depthArray)
+  // const maxDepth = Math.max(...depthArray)
+  // const depthRange = maxDepth - minDepth
+
+  const imageData = ctx.createImageData(videoWidth, videoHeight)
+
+  for (let i = 0; i < depthArray.length; i++) {
+      // const normalizedDepth = ((depthArray[i] - minDepth) / depthRange) * 255
+      const normalizedDepth = depthArray[i]
+      imageData.data[i * 4] = normalizedDepth  // Red channel
+      imageData.data[i * 4 + 1] = normalizedDepth  // Green channel
+      imageData.data[i * 4 + 2] = normalizedDepth  // Blue channel
+      imageData.data[i * 4 + 3] = 255  // Alpha (fully visible)
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+}
+
+
+
+async function getHandDepth(video, wristLandmark) {
+  if (!estimator || !wristLandmark) return
+
+  console.log(wristLandmark)
+  
+
+  const depthMap = await estimateDepth(video)
+  if (!depthMap) return
+
+  const depthTensor = await depthMap.toTensor()
+  const depthArray = await depthTensor.data()
+
+  const videoWidth = video.videoWidth
+  const videoHeight = video.videoHeight
+
+  // Convert wrist landmark (normalized 0-1) to pixel coordinates
+  const x = Math.round(wristLandmark.x * videoWidth)
+  const y = Math.round(wristLandmark.y * videoHeight)
+
+  // Get depth value at wrist position
+  const depthIndex = y * videoWidth + x
+
+  
+  const depthValue = depthArray[depthIndex] || 0 // Avoid undefined errors
+
+  console.log("Wrist Depth:", depthValue) // ✅ Log wrist depth continuously
+
+  return depthValue
+}
+
+
 
 const video = document.getElementById("webcam");
 const canvasElement = document.getElementById("output_canvas");
@@ -109,7 +168,7 @@ function enableCam(event) {
   // enableWebcamButton.innerText = webcamRunning ? "DISABLE PREDICTIONS" : "ENABLE PREDICTIONS";
 
   enableWebcamButton.style.display = "none";
-  
+
   const constraints = {
       video: true
   };
@@ -119,6 +178,8 @@ function enableCam(event) {
       video.addEventListener("loadeddata", predictWebcam);
   });
 }
+
+
 
 let lastVideoTime = -1;
 let results = undefined;
@@ -138,6 +199,7 @@ async function predictWebcam() {
       lastVideoTime = video.currentTime;
       results = handLandmarker.detectForVideo(video, startTimeMs);
   }
+
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   if (results.landmarks) {
@@ -153,11 +215,18 @@ async function predictWebcam() {
   if (results.worldLandmarks) {
     // console.log(results.worldLandmarks)
 
+
+
     if (results.worldLandmarks[0] && results.worldLandmarks[0].length === 21) {
       const landmarks = results.worldLandmarks[0]
       // console.log(landmarks)
       window.createSphereAtHand(landmarks)
+
+      let wristLandmark = landmarks[0]
+      // await renderDepth(video, canvasElement)
     }
+
+    
     // const landmarks = results.worldLandmarks[0]
     // console.log(landmarks[0])
 
