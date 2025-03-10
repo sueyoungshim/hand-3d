@@ -17,9 +17,6 @@ import {
   FilesetResolver,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
 
-import * as tf from '@tensorflow/tfjs';
-import * as depthEstimation from '@tensorflow-models/depth-estimation';
-
 const demosSection = document.getElementById("demos");
 
 let handLandmarker = undefined;
@@ -47,101 +44,101 @@ createHandLandmarker();
 /**
  * DEPTH ESTIMATOR
  */
-let estimator;
+// let estimator;
 
-async function loadDepthEstimator() {
-  console.log(depthEstimation)
+// async function loadDepthEstimator() {
+//   console.log(depthEstimation)
   
-  const model = depthEstimation.SupportedModels.ARPortraitDepth;
-  estimator = await depthEstimation.createEstimator(model);
-}
+//   const model = depthEstimation.SupportedModels.ARPortraitDepth;
+//   estimator = await depthEstimation.createEstimator(model);
+// }
 
-loadDepthEstimator()
+// loadDepthEstimator()
 
-const estimationConfig = {
-  minDepth: 0,
-  maxDepth: 10,
-}
+// const estimationConfig = {
+//   minDepth: 0,
+//   maxDepth: 10,
+// }
 
-async function estimateDepth(videoElement) {
-  if (!estimator) {
-      console.error("Depth model not loaded!")
-      return
-  }
+// async function estimateDepth(videoElement) {
+//   if (!estimator) {
+//       console.error("Depth model not loaded!")
+//       return
+//   }
 
-  // Run depth estimation on video frame
-  const depthMap = await estimator.estimateDepth(videoElement, estimationConfig)
+//   // Run depth estimation on video frame
+//   const depthMap = await estimator.estimateDepth(videoElement, estimationConfig)
 
-  return depthMap // Returns a TensorFlow.js tensor image
-}
-
-
-
-async function renderDepth(video, canvas) {
-  const depthMap = await estimateDepth(video)
-  if (!depthMap) return
-
-
-  const ctx = canvas.getContext("2d")
-  const depthTensor = await depthMap.toTensor()
-  const depthArray = await depthTensor.data()
-
-  console.log(depthArray)
-  
-
-  const videoWidth = video.videoWidth
-  const videoHeight = video.videoHeight
-
-  // // Normalize depth for visualization
-  // const minDepth = Math.min(...depthArray)
-  // const maxDepth = Math.max(...depthArray)
-  // const depthRange = maxDepth - minDepth
-
-  const imageData = ctx.createImageData(videoWidth, videoHeight)
-
-  for (let i = 0; i < depthArray.length; i++) {
-      // const normalizedDepth = ((depthArray[i] - minDepth) / depthRange) * 255
-      const normalizedDepth = depthArray[i]
-      imageData.data[i * 4] = normalizedDepth  // Red channel
-      imageData.data[i * 4 + 1] = normalizedDepth  // Green channel
-      imageData.data[i * 4 + 2] = normalizedDepth  // Blue channel
-      imageData.data[i * 4 + 3] = 255  // Alpha (fully visible)
-  }
-
-  ctx.putImageData(imageData, 0, 0)
-}
+//   return depthMap // Returns a TensorFlow.js tensor image
+// }
 
 
 
-async function getHandDepth(video, wristLandmark) {
-  if (!estimator || !wristLandmark) return
+// async function renderDepth(video, canvas) {
+//   const depthMap = await estimateDepth(video)
+//   if (!depthMap) return
 
-  console.log(wristLandmark)
+
+//   const ctx = canvas.getContext("2d")
+//   const depthTensor = await depthMap.toTensor()
+//   const depthArray = await depthTensor.data()
+
+//   console.log(depthArray)
   
 
-  const depthMap = await estimateDepth(video)
-  if (!depthMap) return
+//   const videoWidth = video.videoWidth
+//   const videoHeight = video.videoHeight
 
-  const depthTensor = await depthMap.toTensor()
-  const depthArray = await depthTensor.data()
+//   // // Normalize depth for visualization
+//   // const minDepth = Math.min(...depthArray)
+//   // const maxDepth = Math.max(...depthArray)
+//   // const depthRange = maxDepth - minDepth
 
-  const videoWidth = video.videoWidth
-  const videoHeight = video.videoHeight
+//   const imageData = ctx.createImageData(videoWidth, videoHeight)
 
-  // Convert wrist landmark (normalized 0-1) to pixel coordinates
-  const x = Math.round(wristLandmark.x * videoWidth)
-  const y = Math.round(wristLandmark.y * videoHeight)
+//   for (let i = 0; i < depthArray.length; i++) {
+//       // const normalizedDepth = ((depthArray[i] - minDepth) / depthRange) * 255
+//       const normalizedDepth = depthArray[i]
+//       imageData.data[i * 4] = normalizedDepth  // Red channel
+//       imageData.data[i * 4 + 1] = normalizedDepth  // Green channel
+//       imageData.data[i * 4 + 2] = normalizedDepth  // Blue channel
+//       imageData.data[i * 4 + 3] = 255  // Alpha (fully visible)
+//   }
 
-  // Get depth value at wrist position
-  const depthIndex = y * videoWidth + x
+//   ctx.putImageData(imageData, 0, 0)
+// }
+
+
+
+// async function getHandDepth(video, wristLandmark) {
+//   if (!estimator || !wristLandmark) return
+
+//   console.log(wristLandmark)
+  
+
+//   const depthMap = await estimateDepth(video)
+//   if (!depthMap) return
+
+//   const depthTensor = await depthMap.toTensor()
+//   const depthArray = await depthTensor.data()
+
+//   const videoWidth = video.videoWidth
+//   const videoHeight = video.videoHeight
+
+//   // Convert wrist landmark (normalized 0-1) to pixel coordinates
+//   const x = Math.round(wristLandmark.x * videoWidth)
+//   const y = Math.round(wristLandmark.y * videoHeight)
+
+//   // Get depth value at wrist position
+//   const depthIndex = y * videoWidth + x
 
   
-  const depthValue = depthArray[depthIndex] || 0 // Avoid undefined errors
+//   const depthValue = depthArray[depthIndex] || 0 // Avoid undefined errors
 
-  console.log("Wrist Depth:", depthValue) // ✅ Log wrist depth continuously
+//   console.log("Wrist Depth:", depthValue) // ✅ Log wrist depth continuously
 
-  return depthValue
-}
+//   return depthValue
+// }
 
 
 

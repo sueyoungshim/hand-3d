@@ -13,7 +13,7 @@ const debugObject = {}
 debugObject.createSphere = () =>
 {
     createSphere(
-        Math.random() * 0.5,
+        Math.min(0.5, Math.random() * 0.5),
         {
             x: (Math.random() - 0.5) * 1,
             y: 1,
@@ -101,7 +101,7 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
     defaultMaterial,
     {
         friction: 0.1,
-        restitution: 0.3
+        restitution: 0.8
     }
 )
 world.defaultContactMaterial = defaultContactMaterial
@@ -164,7 +164,7 @@ const createSphere = (radius, position, mass=1, color='#ffffff') =>
     // Save in objects
     objectsToUpdate.push({ mesh, body })
 
-    if (mass === 0) {
+    if (mass === 0.1) {
         landmarks.push({mesh, body})
     }
 
@@ -181,9 +181,10 @@ const fingerColors = [
 ]
 
 for (let i = 0; i < 21; i++) {
-    const landmark = createSphere(0.1, new THREE.Vector3(i, i, i), 0)
+    const landmark = createSphere(0.1, new THREE.Vector3(i, i, i), 0.1) 
     landmark.material.color = new THREE.Color(fingerColors[i])
 }
+
 
 
 
@@ -241,7 +242,7 @@ const floor = new THREE.Mesh(
 )
 floor.receiveShadow = true
 floor.rotation.x = - Math.PI * 0.5
-// scene.add(floor)
+scene.add(floor)
 
 /**
  * Lights
@@ -287,8 +288,8 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(-3, 2, 3)
+const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 100)
+camera.position.set(-6, 2, 6)
 camera.lookAt(0, 0, 0)
 scene.add(camera)
 
@@ -336,7 +337,7 @@ const tick = () =>
         
         
             const landmark = landmarks[i]
-            const position = new THREE.Vector3(landmarkPositions[i].x * 10, -landmarkPositions[i].y * 10, landmarkPositions[i].z * 10)
+            const position = new THREE.Vector3(landmarkPositions[i].x * 10, -landmarkPositions[i].y * 10 + 0.5, landmarkPositions[i].z * 10)
     
             // console.log(position.z)
             
