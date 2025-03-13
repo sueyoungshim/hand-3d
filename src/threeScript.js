@@ -187,11 +187,25 @@ for (let i = 0; i < 21; i++) {
 
 
 
+let wristX
+let wristY
 
 // landmarks = an array of 21 position objects
-window.createSphereAtHand = (landmarks) => {
-    landmarkPositions = landmarks
+window.createSphereAtHand = (worldLandmarks) => {
+    landmarkPositions = worldLandmarks
 }
+
+window.getWristXY = (canvasLandmarks) => {
+    wristX = canvasLandmarks[0].x
+    wristY = canvasLandmarks[0].y
+    console.log(wristX)
+}
+
+const getDistance = (pointA, pointB) => {
+    return Math.sqrt((pointA.x - pointB.x) ** 2 + (pointA.y - pointB.y) ** 2)
+}
+
+
 
 // Create box
 const boxGeometry = new THREE.BoxGeometry(1, 1, 1)
@@ -289,7 +303,7 @@ window.addEventListener('resize', () =>
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(-6, 2, 6)
+camera.position.set(0, 0, -5)
 camera.lookAt(0, 0, 0)
 scene.add(camera)
 
@@ -332,12 +346,16 @@ const tick = () =>
 
     for (let i = 0; i < landmarks.length; i++) {
         // console.log('landmarks', landmarks)
-        if (landmarkPositions) {
+        if (landmarkPositions && wristX) {
             // console.log('positions', landmarkPositions)
         
         
             const landmark = landmarks[i]
-            const position = new THREE.Vector3(landmarkPositions[i].x * 10, -landmarkPositions[i].y * 10 + 0.5, landmarkPositions[i].z * 10)
+            const position = new THREE.Vector3(
+                landmarkPositions[i].x * 10 + wristX * 5 - 2.5, 
+                -landmarkPositions[i].y * 10 - wristY * 5 + 2.5 + 1, 
+                landmarkPositions[i].z * 10
+            )
     
             // console.log(position.z)
             

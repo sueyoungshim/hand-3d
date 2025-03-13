@@ -41,106 +41,6 @@ const createHandLandmarker = async () => {
 createHandLandmarker();
 
 
-/**
- * DEPTH ESTIMATOR
- */
-// let estimator;
-
-// async function loadDepthEstimator() {
-//   console.log(depthEstimation)
-  
-//   const model = depthEstimation.SupportedModels.ARPortraitDepth;
-//   estimator = await depthEstimation.createEstimator(model);
-// }
-
-// loadDepthEstimator()
-
-// const estimationConfig = {
-//   minDepth: 0,
-//   maxDepth: 10,
-// }
-
-// async function estimateDepth(videoElement) {
-//   if (!estimator) {
-//       console.error("Depth model not loaded!")
-//       return
-//   }
-
-//   // Run depth estimation on video frame
-//   const depthMap = await estimator.estimateDepth(videoElement, estimationConfig)
-
-//   return depthMap // Returns a TensorFlow.js tensor image
-// }
-
-
-
-// async function renderDepth(video, canvas) {
-//   const depthMap = await estimateDepth(video)
-//   if (!depthMap) return
-
-
-//   const ctx = canvas.getContext("2d")
-//   const depthTensor = await depthMap.toTensor()
-//   const depthArray = await depthTensor.data()
-
-//   console.log(depthArray)
-  
-
-//   const videoWidth = video.videoWidth
-//   const videoHeight = video.videoHeight
-
-//   // // Normalize depth for visualization
-//   // const minDepth = Math.min(...depthArray)
-//   // const maxDepth = Math.max(...depthArray)
-//   // const depthRange = maxDepth - minDepth
-
-//   const imageData = ctx.createImageData(videoWidth, videoHeight)
-
-//   for (let i = 0; i < depthArray.length; i++) {
-//       // const normalizedDepth = ((depthArray[i] - minDepth) / depthRange) * 255
-//       const normalizedDepth = depthArray[i]
-//       imageData.data[i * 4] = normalizedDepth  // Red channel
-//       imageData.data[i * 4 + 1] = normalizedDepth  // Green channel
-//       imageData.data[i * 4 + 2] = normalizedDepth  // Blue channel
-//       imageData.data[i * 4 + 3] = 255  // Alpha (fully visible)
-//   }
-
-//   ctx.putImageData(imageData, 0, 0)
-// }
-
-
-
-// async function getHandDepth(video, wristLandmark) {
-//   if (!estimator || !wristLandmark) return
-
-//   console.log(wristLandmark)
-  
-
-//   const depthMap = await estimateDepth(video)
-//   if (!depthMap) return
-
-//   const depthTensor = await depthMap.toTensor()
-//   const depthArray = await depthTensor.data()
-
-//   const videoWidth = video.videoWidth
-//   const videoHeight = video.videoHeight
-
-//   // Convert wrist landmark (normalized 0-1) to pixel coordinates
-//   const x = Math.round(wristLandmark.x * videoWidth)
-//   const y = Math.round(wristLandmark.y * videoHeight)
-
-//   // Get depth value at wrist position
-//   const depthIndex = y * videoWidth + x
-
-  
-//   const depthValue = depthArray[depthIndex] || 0 // Avoid undefined errors
-
-//   console.log("Wrist Depth:", depthValue) // ✅ Log wrist depth continuously
-
-//   return depthValue
-// }
-
-
 
 const video = document.getElementById("webcam");
 const canvasElement = document.getElementById("output_canvas");
@@ -199,50 +99,29 @@ async function predictWebcam() {
 
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  if (results.landmarks) {
-      for (const landmarks of results.landmarks) {
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-              color: "#00FF00",
-              lineWidth: 5
-          });
-          drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
-      }
-  }
 
-  if (results.worldLandmarks) {
-    // console.log(results.worldLandmarks)
-
-
-
-    if (results.worldLandmarks[0] && results.worldLandmarks[0].length === 21) {
-      const landmarks = results.worldLandmarks[0]
-      // console.log(landmarks)
-      window.createSphereAtHand(landmarks)
-
-      let wristLandmark = landmarks[0]
-      // await renderDepth(video, canvasElement)
+  if (results.landmarks && results.worldLandmarks) {
+  
+    // draw 2d
+    for (const landmarks of results.landmarks) {
+      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+        color: "#00FF00",
+        lineWidth: 5
+      });
+      drawLandmarks(canvasCtx, landmarks, { color: "#FF0000", lineWidth: 2 });
     }
 
-    
-    // const landmarks = results.worldLandmarks[0]
-    // console.log(landmarks[0])
+    const canvasLandmarks = results.landmarks[0]
+    const worldLandmarks = results.worldLandmarks[0]
 
-    // const palm = landmarks[0] // Wrist position (or use fingertip, etc.)
+    if (canvasLandmarks && worldLandmarks) {
+      // console.log('index tip on canvas: ', results.landmarks[0][8])
 
-    // // Scale coordinates to fit Three.js world
-    // const x = palm.x * 5
-    // const y = palm.y * 5
-    // const z = palm.z * 5
-
-    // // Call the function in threeScript.js
-    // if (window.createSphereAtHand) {
-    //   console.log(window.createSphereAtHand)
-      
-    //     window.createSphereAtHand(x, y, z)
-    // }
-
-    
+      window.getWristXY(canvasLandmarks)
+      window.createSphereAtHand(worldLandmarks)
+    }
   }
+
   canvasCtx.restore();
 
   if (webcamRunning) {
