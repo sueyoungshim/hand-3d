@@ -45,6 +45,7 @@ createHandLandmarker();
 const video = document.getElementById("webcam");
 const canvasElement = document.getElementById("output_canvas");
 const canvasCtx = canvasElement.getContext("2d");
+const webglElement = document.getElementById('webgl')
 
 const hasGetUserMedia = () => !!navigator.mediaDevices?.getUserMedia;
 
@@ -115,10 +116,7 @@ async function predictWebcam() {
     const worldLandmarks = results.worldLandmarks[0]
 
     if (canvasLandmarks && worldLandmarks) {
-      // console.log('index tip on canvas: ', results.landmarks[0][8])
-
-      window.getWristXY(canvasLandmarks)
-      window.createSphereAtHand(worldLandmarks)
+      window.saveLandmarks(canvasLandmarks, worldLandmarks)
     }
   }
 

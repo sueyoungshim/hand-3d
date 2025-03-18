@@ -44,7 +44,7 @@ video, .output_canvas {
 }
 
 .box {
-  width: 50%; /* Each box takes half of the screen */
+  width: 50%; 
   height: 100%;
 }
 
@@ -57,7 +57,6 @@ video, .output_canvas {
 }
 
 .fill video {
-  /* flex-shrink: 0; */
   min-width: 100%;
   min-height: 100%;
   object-fit: cover;

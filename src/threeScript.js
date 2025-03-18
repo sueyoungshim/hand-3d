@@ -13,7 +13,7 @@ const debugObject = {}
 debugObject.createSphere = () =>
 {
     createSphere(
-        Math.min(0.5, Math.random() * 0.5),
+        Math.min(0.05, Math.random() * 0.05),
         {
             x: (Math.random() - 0.5) * 1,
             y: 1,
@@ -28,9 +28,9 @@ gui.add(debugObject, 'createSphere')
 debugObject.createBox = () =>
 {
     createBox(
-        Math.random(),
-        Math.random(),
-        Math.random(),
+        Math.random() * 0.1,
+        Math.random() * 0.1,
+        Math.random() * 0.1,
         {
             x: (Math.random() - 0.5) * 3,
             y: 3,
@@ -100,8 +100,8 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
     defaultMaterial,
     defaultMaterial,
     {
-        friction: 0.1,
-        restitution: 0.8
+        friction: 0.5,
+        restitution: 0.3
     }
 )
 world.defaultContactMaterial = defaultContactMaterial
@@ -181,7 +181,7 @@ const fingerColors = [
 ]
 
 for (let i = 0; i < 21; i++) {
-    const landmark = createSphere(0.1, new THREE.Vector3(i, i, i), 0.1) 
+    const landmark = createSphere(0.01, new THREE.Vector3(i, i, i), 0.1) 
     landmark.material.color = new THREE.Color(fingerColors[i])
 }
 
@@ -190,15 +190,33 @@ for (let i = 0; i < 21; i++) {
 let wristX
 let wristY
 
-// landmarks = an array of 21 position objects
-window.createSphereAtHand = (worldLandmarks) => {
-    landmarkPositions = worldLandmarks
-}
+let middleKnuckleX
+let middleKnuckleY
+let depthToCamera
 
-window.getWristXY = (canvasLandmarks) => {
-    wristX = canvasLandmarks[0].x
-    wristY = canvasLandmarks[0].y
-    console.log(wristX)
+
+window.saveLandmarks = (canvasLandmarks, worldLandmarks) => {
+    landmarkPositions = worldLandmarks
+
+    // console.log('0: ', landmarkPositions[0])
+    // console.log('4: ', landmarkPositions[4])
+    // console.log('9: ', landmarkPositions[9])
+    // console.log('20: ', landmarkPositions[20])
+    
+
+    middleKnuckleX = canvasLandmarks[9].x
+    middleKnuckleY = canvasLandmarks[9].y
+
+    const canvasDistance = getDistance(canvasLandmarks[0], canvasLandmarks[1])
+    const worldDistance = getDistance(worldLandmarks[0], worldLandmarks[1])
+
+    // console.log('canvas: ', canvasDistance)
+    // console.log('three: ', worldDistance)
+
+    depthToCamera =  worldDistance / canvasDistance
+
+    console.log(depthToCamera)
+    
 }
 
 const getDistance = (pointA, pointB) => {
@@ -278,16 +296,26 @@ scene.add(directionalLight)
 /**
  * Sizes
  */
+const video = document.getElementById('webcam')
+
 const sizes = {
     width: window.innerWidth * 0.5,
     height: window.innerHeight
 }
+
+// const sizes = {
+//     width: video.videoWidth,
+//     height: video.videoHeight
+// }
+
 
 window.addEventListener('resize', () =>
 {
     // Update sizes
     sizes.width = window.innerWidth * 0.5
     sizes.height = window.innerHeight
+    // sizes.width = video.videoWidth
+    // sizes.height = video.videoHeight
 
     // Update camera
     camera.aspect = sizes.width / sizes.height
@@ -302,8 +330,8 @@ window.addEventListener('resize', () =>
  * Camera
  */
 // Base camera
-const camera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0, 0, -5)
+const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 100)
+camera.position.set(0, 0, -1)
 camera.lookAt(0, 0, 0)
 scene.add(camera)
 
@@ -315,7 +343,8 @@ controls.enableDamping = true
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
+    canvas: canvas,
+    // alpha: true
 })
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -346,16 +375,31 @@ const tick = () =>
 
     for (let i = 0; i < landmarks.length; i++) {
         // console.log('landmarks', landmarks)
-        if (landmarkPositions && wristX) {
+        if (landmarkPositions && middleKnuckleX) {
             // console.log('positions', landmarkPositions)
         
         
             const landmark = landmarks[i]
+            // const position = new THREE.Vector3(
+            //     landmarkPositions[i].x * 10 + wristX * 5  - 2.5, 
+            //     -landmarkPositions[i].y * 10 - wristY * 5 + 2.5 + 1, 
+            //     // landmarkPositions[i].z * 10 - depthToCamera * 3 + 5
+            //     landmarkPositions[i].z * 10
+            // )
+
             const position = new THREE.Vector3(
-                landmarkPositions[i].x * 10 + wristX * 5 - 2.5, 
-                -landmarkPositions[i].y * 10 - wristY * 5 + 2.5 + 1, 
-                landmarkPositions[i].z * 10
+                landmarkPositions[i].x + (middleKnuckleX - 0.5) * depthToCamera, 
+                -landmarkPositions[i].y - (middleKnuckleY - 0.5) * depthToCamera,
+                // landmarkPositions[i].z * 10 - depthToCamera * 3 + 5
+                landmarkPositions[i].z + (camera.position.z + depthToCamera * 1.7), // 1.7 = scale factor for accurate sizing to 2d canvas
             )
+
+            // const position = new THREE.Vector3(
+            //     landmarkPositions[i].x , 
+            //     -landmarkPositions[i].y , 
+            //     // landmarkPositions[i].z * 10 - depthToCamera * 3 + 5
+            //     landmarkPositions[i].z
+            // )
     
             // console.log(position.z)
             
