@@ -1,61 +1,80 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import GUI from 'lil-gui'
-// import CANNON from 'cannon' 
+import { Pane } from 'tweakpane'
 import * as CANNON from 'cannon-es'
 
 /**
  * Debug
  */
-const gui = new GUI()
-const debugObject = {}
 
-debugObject.createSphere = () =>
-{
-    createSphere(
-        0.02,
+const pane = new Pane()
+
+pane.title = 'drag here to move'
+
+const titleBar = pane.element.children[0]
+
+pane.element.style.position = 'absolute'
+pane.element.style.top = '20px'
+pane.element.style.left = '20px'
+titleBar.style.cursor = 'grab'
+
+let isDragging = false
+let offsetX, offsetY
+
+titleBar.addEventListener('mousedown', (event) => {
+    isDragging = true
+    offsetX = event.clientX - pane.element.offsetLeft
+    offsetY = event.clientY - pane.element.offsetTop
+    titleBar.style.cursor = 'grabbing'
+})
+
+titleBar.addEventListener('mouseup', (event) => {
+    pane.expanded = !pane.expanded
+})
+
+window.addEventListener('mousemove', (event) => {
+    if (!isDragging) return
+    pane.element.style.left = `${event.clientX - offsetX}px`
+    pane.element.style.top = `${event.clientY - offsetY}px`
+})
+
+window.addEventListener('mouseup', () => {
+    isDragging = false
+    titleBar.style.cursor = 'grab'
+})
+
+const physicsFolder = pane.addFolder({ title: 'physics object' })
+
+physicsFolder
+    .addButton({
+        title: 'add sphere'
+    })
+    .on('click', () => {
+        createSphere(
+            0.02,
+            {
+                x: 0,
+                y: 0.5,
+                z: -0.5
+            },
+            1
+        )
+    })
+
+physicsFolder
+    .addButton({
+        title: 'remove objects'
+    })
+    .on('click', () => {
+        for(const object of objectsToUpdate)
         {
-            x: 0,
-            y: 0.5,
-            z: -0.5
-        },
-        1
-    )
-}
-
-gui.add(debugObject, 'createSphere')
-
-debugObject.createBox = () =>
-{
-    createBox(
-        Math.random() * 0.1,
-        Math.random() * 0.1,
-        Math.random() * 0.1,
-        {
-            x: (Math.random() - 0.5) * 3,
-            y: 3,
-            z: (Math.random() - 0.5) * 3
+            world.removeBody(object.body)
+            scene.remove(object.mesh)
         }
-    )
-}
-gui.add(debugObject, 'createBox')
+        objectsToUpdate.splice(0, objectsToUpdate.length)
+    })
 
-// Reset
-debugObject.reset = () =>
-{
-    for(const object of objectsToUpdate)
-    {
-        // Remove body
-        // object.body.removeEventListener('collide', playHitSound)
-        world.removeBody(object.body)
 
-        // Remove mesh
-        scene.remove(object.mesh)
-    }
-    
-    objectsToUpdate.splice(0, objectsToUpdate.length)
-}
-gui.add(debugObject, 'reset')
 
 /**
  * Base
@@ -65,26 +84,7 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
-
 scene.add(new THREE.GridHelper(10, 10))
-
-/**
- * Sounds
- */
-// const hitSound = new Audio('/sounds/hit.mp3')
-
-// const playHitSound = (collision) =>
-// {
-//     const impactStrength = collision.contact.getImpactVelocityAlongNormal()
-
-//     if(impactStrength > 1.5)
-//     {
-//         hitSound.volume = Math.random()
-//         hitSound.currentTime = 0
-//         hitSound.play()
-//     }
-// }
-
 
 /**
  * Physics
@@ -186,10 +186,6 @@ for (let i = 0; i < 21; i++) {
 }
 
 
-
-let wristX
-let wristY
-
 let middleKnuckleX
 let middleKnuckleY
 let depthToCamera
@@ -198,33 +194,13 @@ let depthToCamera
 window.saveLandmarks = (canvasLandmarks, worldLandmarks) => {
     landmarkPositions = worldLandmarks
 
-    // console.log('0: ', landmarkPositions[0])
-    // console.log('4: ', landmarkPositions[4])
-    // console.log('9: ', landmarkPositions[9])
-    // console.log('20: ', landmarkPositions[20])
-    
-
     middleKnuckleX = canvasLandmarks[9].x
     middleKnuckleY = canvasLandmarks[9].y
 
     const canvasDistance = getDistance(canvasLandmarks[0], canvasLandmarks[1])
     const worldDistance = getDistance(worldLandmarks[0], worldLandmarks[1])
 
-    // console.log('canvas0: ', canvasLandmarks[0])
-    // console.log('canvas1: ', canvasLandmarks[1])
-    // console.log('world0: ', worldLandmarks[0])
-    // console.log('world1: ', worldLandmarks[1])
-    // console.log('canvasDistance: ', canvasDistance)
-    // console.log('worldDistance: ', worldDistance)
-
-
-    // console.log('canvas: ', canvasDistance)
-    // console.log('three: ', worldDistance)
-
     depthToCamera =  worldDistance / canvasDistance
-
-    console.log(depthToCamera)
-    
 }
 
 const getDistance = (pointA, pointB) => {
@@ -267,6 +243,96 @@ const createBox = (width, height, depth, position) =>
 }
 
 // createBox(1, 1.5, 2, { x: 0, y: 3, z: 0 })
+
+/**
+* Particles
+*/
+const textureLoader = new THREE.TextureLoader()
+const particleTexture = textureLoader.load('/particle.png')
+
+const particlesGeometry = new THREE.BufferGeometry()
+const count = 5000
+
+const positions = new Float32Array(count * 3)
+const velocities = new Float32Array(count * 3)
+const colors = new Float32Array(count * 3)
+
+for (let i = 0; i < count * 3; i++) {
+   positions[i] = (i % 3 != 2 ? (Math.random() - 0.5) : -Math.random()) * 0.5
+   colors[i] = Math.random()
+   velocities[i] = 0
+}
+
+particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+
+const particlesMaterial = new THREE.PointsMaterial({
+   size: 0.05,
+   sizeAttenuation: true,
+   alphaMap: particleTexture,
+   transparent: true,
+   depthWrite: false,
+   blending: THREE.AdditiveBlending,
+   vertexColors: true
+})
+
+const particles = new THREE.Points(particlesGeometry, particlesMaterial)
+
+const particlesPARAM = {
+    attractionRadius: 0.1,
+    repulsionStrength: 0.03,
+    dampingFactor: 1.5
+}
+
+const particlesFolder = pane.addFolder({ title: 'particles' })
+
+const addParticlesButton = particlesFolder.addButton({
+    title: 'add particles'
+})
+
+addParticlesButton.add = true
+
+addParticlesButton.on('click', () => {
+    addParticlesButton.add = !addParticlesButton.add
+    if (addParticlesButton.add) {
+        scene.remove(particles)
+        addParticlesButton.title = 'add particles'
+    } else {
+        scene.add(particles)
+        addParticlesButton.title = 'remove particles'
+    }
+})
+
+particlesFolder.addButton({
+    title: 'reset particles'
+}).on('click', () => {
+    const positions = particlesGeometry.attributes.position.array
+    for (let i = 0; i < count * 3; i++) {
+        positions[i] = (i % 3 != 2 ? (Math.random() - 0.5) : -Math.random()) * 0.5
+     }
+})
+
+particlesFolder.addBinding(particlesPARAM, 'attractionRadius', {
+    min: 0, 
+    max: 1,
+    step: 0.1
+})
+
+particlesFolder.addBinding(particlesPARAM, 'repulsionStrength', {
+    min: 0, 
+    max: 0.1,
+    step: 0.01
+})
+
+particlesFolder.addBinding(particlesPARAM, 'dampingFactor', {
+    min: 0, 
+    max: 3,
+    step: 0.1
+})
+
+
+
+
 
 /**
  * Floor
@@ -389,7 +455,6 @@ const tick = () =>
     // Update physics
     world.step(1 / 60, deltaTime, 3)
     
-    
     for(const object of objectsToUpdate)
     {
         object.mesh.position.copy(object.body.position)
@@ -397,53 +462,66 @@ const tick = () =>
     }
 
     for (let i = 0; i < landmarks.length; i++) {
-        // console.log('landmarks', landmarks)
         if (landmarkPositions && middleKnuckleX) {
-            // console.log('positions', landmarkPositions)
-        
-        
             const landmark = landmarks[i]
-            // const position = new THREE.Vector3(
-            //     landmarkPositions[i].x * 10 + wristX * 5  - 2.5, 
-            //     -landmarkPositions[i].y * 10 - wristY * 5 + 2.5 + 1, 
-            //     // landmarkPositions[i].z * 10 - depthToCamera * 3 + 5
-            //     landmarkPositions[i].z * 10
-            // )
-
             const position = new THREE.Vector3(
                 landmarkPositions[i].x + (middleKnuckleX - 0.5) * depthToCamera, 
                 -landmarkPositions[i].y - (middleKnuckleY - 0.5) * depthToCamera,
-                // landmarkPositions[i].z * 10 - depthToCamera * 3 + 5
-                landmarkPositions[i].z + (camera.position.z + depthToCamera * 1.7), // 1.7 = scale factor for accurate sizing to 2d canvas
+                landmarkPositions[i].z + (-1 + depthToCamera * 1.7), // 1.7 = scale factor for accurate sizing to 2d canvas, -1 = initial camera.position.z
             )
-
-            // const position = new THREE.Vector3(
-            //     landmarkPositions[i].x , 
-            //     -landmarkPositions[i].y , 
-            //     // landmarkPositions[i].z * 10 - depthToCamera * 3 + 5
-            //     landmarkPositions[i].z
-            // )
     
-            // console.log(position.z)
-            
-            // console.log(position)
-            
-            // landmark.mesh.position.copy(position)
-            // landmark.body.position.copy(position)
-
             const smoothedPosition = smoothPosition(i, position)
             landmark.mesh.position.copy(smoothedPosition)
             landmark.body.position.copy(smoothedPosition)
         }
     }
 
-    // Update controls
+    // Get particle positions
+    const positionsArray = particlesGeometry.attributes.position.array
+    const velocitiesArray = velocities
+
+    if (landmarkPositions) {
+        for (let i = 0; i < count; i++) {
+            const px = positionsArray[i * 3]
+            const py = positionsArray[i * 3 + 1]
+            const pz = positionsArray[i * 3 + 2]
+
+            for (let j = 0; j < landmarks.length; j++) {
+                const landmark = landmarks[j]
+                const lx = landmark.mesh.position.x
+                const ly = landmark.mesh.position.y
+                const lz = landmark.mesh.position.z
+
+                const dx = px - lx
+                const dy = py - ly
+                const dz = pz - lz
+                const distance = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+                if (distance < particlesPARAM.attractionRadius) {
+                    const factor = (particlesPARAM.attractionRadius - distance) * particlesPARAM.repulsionStrength
+
+                    velocitiesArray[i * 3] += dx * factor
+                    velocitiesArray[i * 3 + 1] += dy * factor
+                    velocitiesArray[i * 3 + 2] += dz * factor
+                }
+            }
+
+            // Apply velocity
+            positionsArray[i * 3] += velocitiesArray[i * 3]
+            positionsArray[i * 3 + 1] += velocitiesArray[i * 3 + 1]
+            positionsArray[i * 3 + 2] += velocitiesArray[i * 3 + 2]
+
+            // Damping to slow down particles
+            velocitiesArray[i * 3] *= particlesPARAM.dampingFactor
+            velocitiesArray[i * 3 + 1] *= particlesPARAM.dampingFactor
+            velocitiesArray[i * 3 + 2] *= particlesPARAM.dampingFactor
+        }
+    }
+
+    particlesGeometry.attributes.position.needsUpdate = true
+
     controls.update()
-
-    // Render
     renderer.render(scene, camera)
-
-    // Call tick again on the next frame
     window.requestAnimationFrame(tick)
 }
 
