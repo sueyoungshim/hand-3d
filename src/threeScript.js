@@ -13,11 +13,11 @@ const debugObject = {}
 debugObject.createSphere = () =>
 {
     createSphere(
-        Math.min(0.05, Math.random() * 0.05),
+        0.02,
         {
-            x: (Math.random() - 0.5) * 1,
-            y: 1,
-            z: (Math.random() - 0.5) * 1
+            x: 0,
+            y: 0.5,
+            z: -0.5
         },
         1
     )
@@ -210,6 +210,14 @@ window.saveLandmarks = (canvasLandmarks, worldLandmarks) => {
     const canvasDistance = getDistance(canvasLandmarks[0], canvasLandmarks[1])
     const worldDistance = getDistance(worldLandmarks[0], worldLandmarks[1])
 
+    // console.log('canvas0: ', canvasLandmarks[0])
+    // console.log('canvas1: ', canvasLandmarks[1])
+    // console.log('world0: ', worldLandmarks[0])
+    // console.log('world1: ', worldLandmarks[1])
+    // console.log('canvasDistance: ', canvasDistance)
+    // console.log('worldDistance: ', worldDistance)
+
+
     // console.log('canvas: ', canvasDistance)
     // console.log('three: ', worldDistance)
 
@@ -274,7 +282,7 @@ const floor = new THREE.Mesh(
 )
 floor.receiveShadow = true
 floor.rotation.x = - Math.PI * 0.5
-scene.add(floor)
+// scene.add(floor)
 
 /**
  * Lights
@@ -332,12 +340,14 @@ window.addEventListener('resize', () =>
 // Base camera
 const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 100)
 camera.position.set(0, 0, -1)
-camera.lookAt(0, 0, 0)
+// camera.lookAt(0, 10, 0)
 scene.add(camera)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
 controls.enableDamping = true
+
+// controls.target = new THREE.Vector3(0, 0.1, 0)
 
 /**
  * Renderer
@@ -356,6 +366,19 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
  */
 const clock = new THREE.Clock()
 let oldElapsedTime = 0
+
+const SMOOTHING_FACTOR = 0.1 // Adjust this to fine-tune stability
+const previousPositions = new Map()
+
+const smoothPosition = (index, newPos) => {
+    if (!previousPositions.has(index)) {
+        previousPositions.set(index, new THREE.Vector3().copy(newPos))
+    }
+    const smoothedPos = previousPositions.get(index).lerp(newPos, SMOOTHING_FACTOR)
+    previousPositions.set(index, smoothedPos.clone())
+    return smoothedPos
+}
+
 
 const tick = () =>
 {
@@ -405,10 +428,12 @@ const tick = () =>
             
             // console.log(position)
             
-            landmark.mesh.position.copy(position)
-            landmark.body.position.copy(position)
-            // landmark.mesh.quaternion.copy(position)
-            // landmark.body.quaternion.copy(position)
+            // landmark.mesh.position.copy(position)
+            // landmark.body.position.copy(position)
+
+            const smoothedPosition = smoothPosition(i, position)
+            landmark.mesh.position.copy(smoothedPosition)
+            landmark.body.position.copy(smoothedPosition)
         }
     }
 
