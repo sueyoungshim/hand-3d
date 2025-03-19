@@ -44,7 +44,8 @@ export default class Physics
     setBodyFromThree(threeInstance, isLandmark=false) {
         const mesh = threeInstance.mesh
 
-        const rigidBodyDesc = new RAPIER.RigidBodyDesc(RAPIER.RigidBodyType.Dynamic)
+        const rigidBodyType = isLandmark ? RAPIER.RigidBodyType.KinematicPositionBased : RAPIER.RigidBodyType.Dynamic
+        const rigidBodyDesc = new RAPIER.RigidBodyDesc(rigidBodyType)
         rigidBodyDesc.setTranslation(
             mesh.position.x, 
             mesh.position.y,
@@ -57,10 +58,11 @@ export default class Physics
         rigidBody.sleep()
         threeInstance.rigidBody = rigidBody
 
-        console.log(mesh.scale)
+        const colliderDesc = RAPIER.ColliderDesc.ball(mesh.scale.x)
+
+        const mass = isLandmark ? 0.1 : 1
         
-        const colliderDesc = RAPIER.ColliderDesc.ball(mesh.scale)
-        colliderDesc.setMass(1)
+        colliderDesc.setMass(mass)
 
         const collider = this.world.createCollider(colliderDesc, rigidBody)
         threeInstance.collider = collider

@@ -37,7 +37,7 @@ export default class HandTracking {
             const landmark = {}
 
             // create three.js mesh
-            landmark.mesh = this.createSphere(0.01, new THREE.Vector3(i, i, i), 0.1)
+            landmark.mesh = this.createSphere(0.5, new THREE.Vector3(i, i, i))
 
             // create dynamic physics collider
             this.physics.setBodyFromThree(landmark, true)
@@ -108,6 +108,9 @@ export default class HandTracking {
                     -this.landmarkPositions[i].y - (this.middleKnuckleY - 0.5) * this.depthToCamera,
                     this.landmarkPositions[i].z + (-1 + this.depthToCamera * 1.7), // 1.7 = scale factor for accurate sizing to 2d canvas, -1 = initial camera.position.z
                 )
+
+                position.multiplyScalar(50)
+                position.z += 25
         
                 const smoothedPosition = this.smoothPosition(i, position)
                 landmark.mesh.position.copy(smoothedPosition)

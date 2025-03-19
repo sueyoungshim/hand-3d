@@ -24,6 +24,7 @@ export default class PhysicsDebug {
 
     update() {
         const debugData = this.world.debugRender() 
+        
         const vertices = new Float32Array(debugData.vertices)
         const colors = new Float32Array(debugData.colors)
 
