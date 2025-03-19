@@ -1,8 +1,11 @@
 import * as THREE from 'three'
 import Experience from '../Experience'
+import EventEmitter from '../Utils/EventEmitter'
 
-export default class HandTracking {
+export default class HandTracking extends EventEmitter {
     constructor(physics) {
+        super()
+
         this.experience = new Experience()
         this.scene = this.experience.scene
         this.physics = physics
@@ -87,7 +90,6 @@ export default class HandTracking {
         return Math.sqrt((pointA.x - pointB.x) ** 2 + (pointA.y - pointB.y) ** 2)
     }
 
-
     smoothPosition(index, newPos) {
         if (!this.previousPositions.has(index)) {
             this.previousPositions.set(index, new THREE.Vector3().copy(newPos))
@@ -96,7 +98,6 @@ export default class HandTracking {
         this.previousPositions.set(index, smoothedPos.clone())
         return smoothedPos
     }
-
 
     update()
     {

@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 
 import Experience from "../Experience"
+import EventEmitter from '../Utils/EventEmitter'
 
-export default class Particles
+export default class Particles 
 {
     constructor()
     {
@@ -11,10 +12,12 @@ export default class Particles
         this.resources = this.experience.resources
         this.time = this.experience.time
         this.debug = this.experience.debug
+        this.world = this.experience.world
+        this.hand = this.world.hand
         
         this.particlesPARAM = {
-            attractionRadius: 0.1,
-            repulsionStrength: 0.03,
+            attractionRadius: 1.0,
+            repulsionStrength: 0.1,
             dampingFactor: 1.0
         }
 
@@ -39,7 +42,7 @@ export default class Particles
         this.colors = new Float32Array(this.count * 3)
         
         for (let i = 0; i < this.count * 3; i++) {
-           this.positions[i] = (i % 3 != 2 ? (Math.random() - 0.5) : -Math.random()) * 0.5
+           this.positions[i] = (Math.random() - 0.5) * 20
            this.colors[i] = Math.random()
            this.velocities[i] = 0
         }
@@ -48,7 +51,7 @@ export default class Particles
         this.particlesGeometry.setAttribute('color', new THREE.BufferAttribute(this.colors, 3))
         
         this.particlesMaterial = new THREE.PointsMaterial({
-           size: 0.05,
+           size: 1,
            sizeAttenuation: true,
            alphaMap: this.particleTexture,
            transparent: true,
@@ -62,17 +65,20 @@ export default class Particles
 
     update()
     {
+        this.landmarks = this.hand.landmarks
+        this.landmarkPositions = this.hand.landmarkPositions
+
         const positionsArray = this.particlesGeometry.attributes.position.array
         const velocitiesArray = this.velocities
 
-        if (landmarkPositions) {
-            for (let i = 0; i < count; i++) {
+        if (this.landmarkPositions) {
+            for (let i = 0; i < this.count; i++) {
                 const px = positionsArray[i * 3]
                 const py = positionsArray[i * 3 + 1]
                 const pz = positionsArray[i * 3 + 2]
 
-                for (let j = 0; j < landmarks.length; j++) {
-                    const landmark = landmarks[j]
+                for (let j = 0; j < this.landmarks.length; j++) {
+                    const landmark = this.landmarks[j]
                     const lx = landmark.mesh.position.x
                     const ly = landmark.mesh.position.y
                     const lz = landmark.mesh.position.z
@@ -103,7 +109,7 @@ export default class Particles
             }
         }
 
-        particlesGeometry.attributes.position.needsUpdate = true
+        this.particlesGeometry.attributes.position.needsUpdate = true
     }
 
     setDebug()
@@ -119,10 +125,10 @@ export default class Particles
         addParticlesButton.on('click', () => {
             addParticlesButton.add = !addParticlesButton.add
             if (addParticlesButton.add) {
-                scene.remove(particles)
+                this.scene.remove(this.particles)
                 addParticlesButton.title = 'add particles'
             } else {
-                scene.add(particles)
+                this.scene.add(this.particles)
                 addParticlesButton.title = 'remove particles'
             }
         })
@@ -132,20 +138,20 @@ export default class Particles
         }).on('click', () => {
             const positions = this.particlesGeometry.attributes.position.array
             for (let i = 0; i < count * 3; i++) {
-                positions[i] = (i % 3 != 2 ? (Math.random() - 0.5) : -Math.random()) * 0.5
+                positions[i] = (i % 3 != 2 ? (Math.random() - 0.5) : -Math.random()) * 10
             }
         })
 
         particlesFolder.addBinding(this.particlesPARAM, 'attractionRadius', {
             min: 0, 
-            max: 1,
+            max: 2,
             step: 0.1
         })
 
         particlesFolder.addBinding(this.particlesPARAM, 'repulsionStrength', {
             min: 0, 
-            max: 0.1,
-            step: 0.01
+            max: 1.0,
+            step: 0.1
         })
 
         particlesFolder.addBinding(this.particlesPARAM, 'dampingFactor', {

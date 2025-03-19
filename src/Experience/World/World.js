@@ -43,9 +43,7 @@ export default class World
         this.environment = new Environment()
 
         this.hand = new HandTracking(this.physics)
-
-
-        // this.particles = new Particles()
+        this.particles = new Particles()
     }
 
     setDebug()
