@@ -23,6 +23,7 @@ export default class HandTracking extends EventEmitter {
         this.middleKnuckleX = null
         this.middleKnuckleY = null
         this.depthToCamera = null
+        this.visible = false
 
         this.SMOOTHING_FACTOR = 0.1
         this.previousPositions = new Map()
@@ -40,14 +41,14 @@ export default class HandTracking extends EventEmitter {
             const landmark = {}
 
             // create three.js mesh
-            landmark.mesh = this.createSphere(0.5, new THREE.Vector3(i, i, i))
+            landmark.mesh = this.createSphere(0.5, new THREE.Vector3(10, 10, -10))
 
             // create dynamic physics collider
             this.physics.setBodyFromThree(landmark, true)
 
             // change finger colors
             landmark.mesh.material.color = new THREE.Color(this.fingerColors[i])
-
+            
             this.landmarks.push(landmark)
         }
     }
@@ -59,11 +60,13 @@ export default class HandTracking extends EventEmitter {
 
     setMaterial()
     {
-        this.material = new THREE.MeshStandardMaterial({
-            metalness: 0.3,
-            roughness: 0.4,
-            envMapIntensity: 0.5
-        })
+        // this.material = new THREE.MeshStandardMaterial({
+        //     metalness: 0.3,
+        //     roughness: 0.4,
+        //     envMapIntensity: 0.5
+        // })
+
+        this.material = new THREE.MeshMatcapMaterial()
     }
 
     createSphere(radius, position) {
@@ -98,6 +101,7 @@ export default class HandTracking extends EventEmitter {
         this.previousPositions.set(index, smoothedPos.clone())
         return smoothedPos
     }
+
 
     update()
     {

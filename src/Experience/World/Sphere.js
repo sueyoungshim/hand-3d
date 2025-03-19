@@ -62,7 +62,7 @@ export default class Sphere
     setDebug()
     {
 
-        const physicsFolder = this.debug.ui.addFolder({ title: 'physics object' })
+        // const physicsFolder = this.debug.ui.addFolder({ title: 'physics object' })
 
         // physicsFolder
         //     .addButton({
@@ -84,16 +84,21 @@ export default class Sphere
         //         }
         //         objectsToUpdate.splice(0, objectsToUpdate.length)
         //     })
+
         
         const ballPitFolder = this.debug.ui.addFolder({ title: 'ball pit' })
         
-        ballPitFolder.addButton({
+        const addBallPitButton = ballPitFolder.addButton({
             title: 'add ball pit'
-        }).on('click', () => {
-            console.log('add ball pit')
-        
-            // add walls
-      
+        })
+        let clicked = false
+        addBallPitButton.on('click', () => {
+            if (!clicked) {
+                this.physics.setWalls()
+                clicked = true
+                addBallPitButton.title = 'add more balls'
+            }
+
             // add balls
             for (let i = 0; i < 20; i++) {
                 this.setMesh()
