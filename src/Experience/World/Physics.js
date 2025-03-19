@@ -24,6 +24,8 @@ export default class Physics
                 this.gravity = new RAPIER.Vector3(0, -9.82, 0)
                 this.world = new RAPIER.World(this.gravity)
 
+                this.eventQueue = new RAPIER.EventQueue(true)
+
                 this.setFloor()  
                 resolve()
             } catch (error) {
@@ -45,22 +47,22 @@ export default class Physics
         const mesh = threeInstance.mesh
 
         const rigidBodyType = isLandmark ? RAPIER.RigidBodyType.KinematicPositionBased : RAPIER.RigidBodyType.Dynamic
+        
         const rigidBodyDesc = new RAPIER.RigidBodyDesc(rigidBodyType)
         rigidBodyDesc.setTranslation(
             mesh.position.x, 
             mesh.position.y,
             mesh.position.z
         )
-        rigidBodyDesc.setLinvel(0, 0, 0)
-        rigidBodyDesc.setAngvel(0, 0, 0)
 
         const rigidBody = this.world.createRigidBody(rigidBodyDesc)
-        rigidBody.sleep()
         threeInstance.rigidBody = rigidBody
 
         const colliderDesc = RAPIER.ColliderDesc.ball(mesh.scale.x)
 
-        const mass = isLandmark ? 0.1 : 1
+        colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
+
+        const mass = 1
         
         colliderDesc.setMass(mass)
 
@@ -71,11 +73,21 @@ export default class Physics
         this.meshBodyPairs.push({ mesh, rigidBody })
     }
 
+    handleCollisions() {
+        this.eventQueue.drainCollisionEvents((handle1, handle2, started) => {
+            
+            if (started) {
+                console.log(`Collision detected between ${handle1} and ${handle2}`)
+            }
+        })
+    }
+
     update()
     {
         if (!this.world) return 
 
-        this.world.step()
+        this.world.step(this.eventQueue)
+
 
         this.meshBodyPairs.forEach(({ mesh, rigidBody }) => {
             const position = rigidBody.translation()
@@ -84,5 +96,8 @@ export default class Physics
             mesh.position.set(position.x, position.y, position.z)
             mesh.quaternion.set(rotation.x, rotation.y, rotation.z, rotation.w)
         })
+
+        this.handleCollisions()
+        
     }
 }

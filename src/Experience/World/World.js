@@ -4,6 +4,7 @@ import Physics from './Physics.js'
 import PhysicsDebug from '../Utils/PhysicsDebug.js'
 import Particles from './Particles.js'
 import HandTracking from './Hand.js'
+import Sphere from './Sphere.js'
 
 export default class World
 {
@@ -43,6 +44,7 @@ export default class World
         this.environment = new Environment()
 
         this.hand = new HandTracking(this.physics)
+        this.sphere = new Sphere(this.physics)
         this.particles = new Particles()
     }
 

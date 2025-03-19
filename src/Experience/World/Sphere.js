@@ -4,20 +4,7 @@ import Experience from '../Experience.js'
 
 export default class Sphere
 {
-    /**
-     * @typedef {Object} SphereParams
-     * @property {THREE.Geometry} [geometry] - Custom geometry for the sphere (optional).
-     * @property {THREE.Material} [material] - Custom material for the sphere (optional).
-     * @property {number} radius - The radius of the sphere.
-     * @property {THREE.Vector3} position - The initial position of the sphere.
-     * @property {THREE.Vector3} [color] - The initial position of the sphere.
-     */
-
-    /**
-     * @param {SphereParams} param - Configuration options for the sphere.
-     */
-
-    constructor(param)
+    constructor(physics)
     {
         this.experience = new Experience()
         this.scene = this.experience.scene
@@ -25,45 +12,45 @@ export default class Sphere
         this.time = this.experience.time
         this.debug = this.experience.debug
 
-        this.param = param
+        this.physics = physics
+
 
         this.setGeometry()
         this.setMaterial()
-        this.setMesh()
-        // this.setPhysics()
+        // this.setMesh()
+        this.setDebug()
     }
 
     setGeometry()
     {
-        if (this.param.geometry) {
-            this.geometry = geometry
-            return
-        } 
-
         this.geometry = new THREE.SphereGeometry(1, 10, 10)
     }
 
     setMaterial()
     {
-        if (this.param.material) {
-            this.material = material
-            return
-        }
+        // this.material = new THREE.MeshStandardMaterial({
+        //     metalness: 0.3,
+        //     roughness: 0.4,
+        //     envMapIntensity: 0.5
+        // })
 
-        this.material = new THREE.MeshStandardMaterial({
-            metalness: 0.3,
-            roughness: 0.4,
-            envMapIntensity: 0.5
-        })
+        this.material = new THREE.MeshMatcapMaterial()
     }
 
     setMesh()
     {
         this.mesh = new THREE.Mesh(this.geometry, this.material)
         this.mesh.castShadow = true
-        this.mesh.scale.setScalar(this.param.radius)
-        this.mesh.position.copy(this.param.position)
+        this.mesh.scale.setScalar(0.5)
+        this.mesh.position.set(
+            (Math.random() - 0.5) * 10, 
+            (Math.random() + 0.5) * 2, 
+            (Math.random() - 0.5) * 10)
         this.scene.add(this.mesh)
+
+        this.instance = { mesh: this.mesh }
+
+        this.physics.setBodyFromThree(this.instance)
     }
 
     setColor(color)
@@ -71,12 +58,46 @@ export default class Sphere
         this.material.color = color
         this.color = color
     }
-
-    setPhysics() {
-        // this.physics.setBodyFromThree(this, this.angle)
-    }
-
+    
     setDebug()
     {
+
+        const physicsFolder = this.debug.ui.addFolder({ title: 'physics object' })
+
+        // physicsFolder
+        //     .addButton({
+        //         title: 'add sphere'
+        //     })
+        //     .on('click', () => {
+        //         this.setMesh()
+        //     })
+        
+        // physicsFolder
+        //     .addButton({
+        //         title: 'remove objects'
+        //     })
+        //     .on('click', () => {
+        //         for(const object of objectsToUpdate)
+        //         {
+        //             world.removeBody(object.body)
+        //             scene.remove(object.mesh)
+        //         }
+        //         objectsToUpdate.splice(0, objectsToUpdate.length)
+        //     })
+        
+        const ballPitFolder = this.debug.ui.addFolder({ title: 'ball pit' })
+        
+        ballPitFolder.addButton({
+            title: 'add ball pit'
+        }).on('click', () => {
+            console.log('add ball pit')
+        
+            // add walls
+      
+            // add balls
+            for (let i = 0; i < 20; i++) {
+                this.setMesh()
+            }
+        })
     }
 }
