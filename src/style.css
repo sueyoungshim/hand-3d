@@ -88,7 +88,10 @@ video, .output_canvas {
 
 /* Default wrapper view */
 .tp-dfwv {
-  min-width: 360px;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
 }
 /* Input and monitor view */
 .tp-lblv_v {

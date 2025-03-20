@@ -13,11 +13,14 @@ export default class Debug
     {
         this.ui.title = 'drag here to move'
 
-        const titleBar = this.ui.element.children[0]
-        
+        const parentElement = this.ui.element.parentElement
+        parentElement.style.top = '20px'
+        parentElement.style.left = '20px'
+
         this.ui.element.style.position = 'absolute'
-        this.ui.element.style.top = '20px'
-        this.ui.element.style.left = '-1000px'
+        this.ui.element.style.minWidth = '360px'
+
+        const titleBar = this.ui.element.children[0]
         titleBar.style.cursor = 'grab'
         
         let isDragging = false
