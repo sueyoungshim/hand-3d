@@ -97,9 +97,9 @@ export default class Physics
         const colliderDesc = RAPIER.ColliderDesc.ball(mesh.scale.x)
 
         colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS)
-        colliderDesc.setRestitution(1)
+        // colliderDesc.setRestitution(1)
 
-        const mass = 1
+        const mass = 0.01
         
         colliderDesc.setMass(mass)
 
