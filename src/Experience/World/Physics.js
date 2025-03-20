@@ -42,7 +42,7 @@ export default class Physics
         const floorBody = this.world.createRigidBody(
             new RAPIER.RigidBodyDesc(RAPIER.RigidBodyType.Fixed)
         )
-        const floorShape = RAPIER.ColliderDesc.cuboid(100, 0, 100)
+        const floorShape = RAPIER.ColliderDesc.cuboid(15, 0, 15)
         this.world.createCollider(floorShape, floorBody)
     }
 
